@@ -77,7 +77,7 @@ except (OSError, ValueError, EOFError, ImportError) as error:
 resultado = metricas["modelos"][metricas["seleccionado"]]
 
 with st.sidebar:
-    st.markdown("## ACV Insight")
+    st.markdown("## PROYECTO")
     st.divider()
     seccion = st.radio(
         "Explorar aplicación",
@@ -100,6 +100,23 @@ if seccion == "Inicio":
         unsafe_allow_html=True,
     )
     st.write("El proyecto integra el análisis de los dos primeros cortes y despliega el pipeline entrenado en una aplicación web. Las predicciones son demostraciones del comportamiento estadístico del modelo, no valoraciones de salud individuales.")
+    st.markdown("### ¿Qué es un accidente cerebrovascular (ACV)?")
+    st.write(
+        "Un accidente cerebrovascular, conocido como ACV, ocurre "
+        "cuando se interrumpe el flujo de sangre hacia una parte "
+        "del cerebro o cuando se rompe un vaso sanguíneo cerebral. "
+        "Esto puede provocar daños en las células cerebrales y "
+        "afectar funciones como el movimiento, el habla y la memoria."
+    )
+    st.write(
+        "En este proyecto utilizamos técnicas de minería de datos "
+        "y aprendizaje automático para analizar variables como "
+        "la edad, la hipertensión, las enfermedades cardíacas, "
+        "la glucosa y el índice de masa corporal, con el objetivo "
+        "de identificar patrones relacionados con la presencia "
+        "de ACV en el conjunto de datos estudiado."
+    )
+
     a, b, c, d = st.columns(4)
     a.metric("Registros originales", f'{metricas["dataset_original"]:,}'.replace(",", "."))
     b.metric("Casos con ACV", str(metricas["casos_stroke_originales"]))
