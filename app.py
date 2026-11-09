@@ -25,7 +25,7 @@ COLORES = {"azul": "#16324B", "verde": "#138A86", "coral": "#DC695D", "gris": "#
 
 st.set_page_config(
     page_title="ACV Insight | Minería de Datos",
-    page_icon="🧠",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
