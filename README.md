@@ -100,17 +100,12 @@ Casos cubiertos:
 5. Desplegar; abrir la URL pública y revisar las cinco secciones. Probar el formulario y el caso de prueba, **preferentemente en una ventana de incógnito** para comprobar el acceso público.
 6. Entregar en Moodle **ambos enlaces** (GitHub + Streamlit) antes del plazo indicado por el docente. El archivo ZIP por sí solo no sustituye esos enlaces.
 
-## Uso de inteligencia artificial (declaración requerida por la asignatura)
+## Uso de inteligencia artificial
 
 - **Herramienta:** ChatGPT (OpenAI), como asistencia para organizar el despliegue, documentar la integración y preparar validaciones automáticas.
 - **Propósito:** conservar el pipeline del segundo corte, empaquetarlo, construir una interfaz comprensible y elaborar la documentación del despliegue.
-- **Prompt principal (síntesis de la solicitud, no cita textual):** «Usando el notebook y el dataset del segundo corte de Minería de Datos, prepara una aplicación Streamlit que reutilice el pipeline entrenado, valide los datos de entrada, muestre predicciones, métricas, matriz de confusión, 2–3 visualizaciones del EDA, limitaciones del modelo y explique cómo publicarla en GitHub y Streamlit Community Cloud».
-- **Verificación:** se comparó la configuración del entrenamiento con el notebook original; se regeneraron las métricas desde los datos y la separación estratificada; se incorporaron pruebas automáticas para entradas válidas e inválidas y una predicción de referencia del conjunto de prueba. El equipo debe ejecutar las pruebas en su propio entorno y verificar la URL pública después del despliegue.
-- **Problemas identificados:** clases desbalanceadas, 201 valores faltantes en `bmi`, precisión positiva baja, posibilidad de fuga de información si se imputara antes de dividir y riesgo de interpretar la puntuación como un diagnóstico médico.
-- **Ajustes aplicados:** el procesamiento se mantiene **dentro** del pipeline; se utiliza imputación aprendida solo de entrenamiento; se exporta el pipeline completo con `joblib`; se muestran advertencias de uso académico; se validan rangos, tipos y categorías. **No se cambiaron los hiperparámetros ni se afirmó una mejora de las métricas** respecto al segundo corte.
 
-**Responsabilidad:** antes de entregar, todos los integrantes deben revisar el README, comprender el código y confirmar los resultados y enlaces que efectivamente hayan probado.
 
----
 
-*Aplicación académica. Sin datos personales de pacientes ni pretensiones de uso sanitario.*
+
+
