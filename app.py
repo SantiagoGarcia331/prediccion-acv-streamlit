@@ -77,7 +77,7 @@ except (OSError, ValueError, EOFError, ImportError) as error:
 resultado = metricas["modelos"][metricas["seleccionado"]]
 
 with st.sidebar:
-    st.markdown("## 🧠 ACV Insight")
+    st.markdown("## ACV Insight")
     st.caption("Proyecto académico · Minería de Datos · Corte 3")
     st.divider()
     seccion = st.radio(
@@ -88,7 +88,7 @@ with st.sidebar:
     st.divider()
     st.caption("**Modelo desplegado:** Regresión logística")
     st.caption("**Base de datos:** Stroke Prediction Dataset (Kaggle)")
-    st.warning("Prototipo exclusivamente académico. No sirve para diagnosticar, descartar ni decidir tratamientos de ACV.", icon="⚠️")
+    st.warning("Prototipo exclusivamente académico. No sirve para diagnosticar, descartar ni decidir tratamientos de ACV.")
 
 if seccion == "Inicio":
     st.markdown(
@@ -198,9 +198,9 @@ elif seccion == "Simulador de predicción":
                                   index=["Female", "Male"].index(ejemplo["gender"]),
                                   format_func={"Female": "Femenino", "Male": "Masculino"}.get,
                                   key="genero_"+sufijo)
-            edad = st.number_input("Edad (años)", min_value=0.08, max_value=82.0,
-                                   value=float(ejemplo["age"]), step=0.5,
-                                   help="Rango observado en los registros originales.", key="edad_"+sufijo)
+            edad = st.number_input("Edad (años)", min_value=1, max_value=82.0,
+                                   value=float(ejemplo["age"]), step=1,
+                                   format="%d", key="edad_"+sufijo)
             estado = st.selectbox("¿Alguna vez estuvo casado/a?", ["Yes", "No"],
                                   index=["Yes", "No"].index(ejemplo["ever_married"]),
                                   format_func={"Yes": "Sí", "No": "No"}.get,
