@@ -1,0 +1,63 @@
+{
+  "proyecto": "Predicción de accidente cerebrovascular (ACV)",
+  "seleccionado": "Regresión logística",
+  "motivo_seleccion": "Mejor F1 positivo, PR-AUC, ROC-AUC y validación cruzada que el árbol.",
+  "dataset_original": 5110,
+  "registros_modelado": 5109,
+  "casos_stroke_originales": 249,
+  "porcentaje_positivos_original": 4.87279843444227,
+  "entrenamiento": 4087,
+  "prueba": 1022,
+  "version_sklearn": "1.8.0",
+  "base_mayoritaria": {
+    "accuracy": 0.9510763209393346,
+    "recall_stroke": 0.0,
+    "f1_stroke": 0.0
+  },
+  "modelos": {
+    "Regresión logística": {
+      "accuracy": 0.7377690802348337,
+      "precision_stroke": 0.1342281879194631,
+      "recall_stroke": 0.8,
+      "f1_stroke": 0.22988505747126436,
+      "roc_auc": 0.8393209876543211,
+      "pr_auc": 0.259434145687086,
+      "matriz_confusion": [
+        [
+          714,
+          258
+        ],
+        [
+          10,
+          40
+        ]
+      ],
+      "cv_f1_media": 0.2372372379779923,
+      "cv_f1_desviacion": 0.01830322672040196,
+      "cv_recall_media": 0.819102564102564,
+      "cv_pr_auc_media": 0.19204026153575504
+    },
+    "Árbol de decisión": {
+      "accuracy": 0.713307240704501,
+      "precision_stroke": 0.1238390092879257,
+      "recall_stroke": 0.8,
+      "f1_stroke": 0.21447721179624665,
+      "roc_auc": 0.8062037037037036,
+      "pr_auc": 0.17274384725700762,
+      "matriz_confusion": [
+        [
+          689,
+          283
+        ],
+        [
+          10,
+          40
+        ]
+      ],
+      "cv_f1_media": 0.19983701207581805,
+      "cv_f1_desviacion": 0.022728786697979685,
+      "cv_recall_media": 0.7341025641025641,
+      "cv_pr_auc_media": 0.13646098986814226
+    }
+  }
+}

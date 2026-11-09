@@ -1,0 +1,18 @@
+{
+  "entrada": {
+    "gender": "Female",
+    "age": 28.0,
+    "hypertension": 1,
+    "heart_disease": 0,
+    "ever_married": "Yes",
+    "work_type": "Govt_job",
+    "Residence_type": "Rural",
+    "avg_glucose_level": 83.66,
+    "bmi": 36.4,
+    "smoking_status": "never smoked"
+  },
+  "etiqueta_real": 0,
+  "prediccion_notebook": 0,
+  "probabilidad_notebook": 0.089104796051,
+  "explicacion": "Ejemplo reservado del conjunto de prueba, no un nuevo dato clínico."
+}
