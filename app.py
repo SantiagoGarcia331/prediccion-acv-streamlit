@@ -197,10 +197,15 @@ elif seccion == "Simulador de predicción":
             genero = st.selectbox("Género registrado", ["Female", "Male"],
                                   index=["Female", "Male"].index(ejemplo["gender"]),
                                   format_func={"Female": "Femenino", "Male": "Masculino"}.get,
-                                  key="genero_"+sufijo)
-            edad = st.number_input("Edad (años)", min_value=1, max_value=82.0,
-                                   value=float(ejemplo["age"]), step=1,
-                                   help="Rango observado en los registros originales.", key="edad_"+sufijo)
+                                  key="genero_"+sufijo)   
+            edad = st.number_input("Edad (años cumplidos)",
+                                   min_value=1,
+                                   max_value=82,
+                                   value=int(ejemplo["age"]),
+                                   step=1,
+                                   format="%d",
+                                   key="edad_"+sufijo)
+
             estado = st.selectbox("¿Alguna vez estuvo casado/a?", ["Yes", "No"],
                                   index=["Yes", "No"].index(ejemplo["ever_married"]),
                                   format_func={"Yes": "Sí", "No": "No"}.get,
