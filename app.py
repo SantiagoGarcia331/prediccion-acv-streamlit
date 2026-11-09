@@ -93,7 +93,7 @@ with st.sidebar:
 if seccion == "Inicio":
     st.markdown(
         """<section class="hero">
-          <div class="eyebrow">MINERÍA DE DATOS · TERCER CORTE</div>
+          <div class="eyebrow">MINERÍA DE DATOS</div>
           <h1>Explorando patrones asociados al ACV</h1>
           <p>Una experiencia interactiva para estudiar un modelo de clasificación de accidente cerebrovascular
           a partir de variables demográficas, clínicas y de estilo de vida.</p>
@@ -200,7 +200,7 @@ elif seccion == "Simulador de predicción":
                                   key="genero_"+sufijo)
             edad = st.number_input("Edad (años)", min_value=1, max_value=82.0,
                                    value=float(ejemplo["age"]), step=1,
-                                   format="%d", key="edad_"+sufijo)
+                                   help="Rango observado en los registros originales.", key="edad_"+sufijo)
             estado = st.selectbox("¿Alguna vez estuvo casado/a?", ["Yes", "No"],
                                   index=["Yes", "No"].index(ejemplo["ever_married"]),
                                   format_func={"Yes": "Sí", "No": "No"}.get,
