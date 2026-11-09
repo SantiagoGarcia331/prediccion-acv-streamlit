@@ -1,4 +1,4 @@
-"""Aplicación académica de despliegue del clasificador de ACV (tercer corte).
+"""Aplicación académica de despliegue del clasificador de ACV.
 
 Ejecutar: streamlit run app.py
 El entrenamiento se realiza únicamente con train_model.py, fuera de la app.
@@ -78,7 +78,6 @@ resultado = metricas["modelos"][metricas["seleccionado"]]
 
 with st.sidebar:
     st.markdown("## ACV Insight")
-    st.caption("Proyecto académico · Minería de Datos · Corte 3")
     st.divider()
     seccion = st.radio(
         "Explorar aplicación",
@@ -337,5 +336,3 @@ else:  # Sobre el proyecto
 **Limitaciones:** datos históricos secundarios; desbalance pronunciado de clases; precisión positiva baja; numerosos falsos positivos; ausencia de calibración probabilística, evaluación externa o validación clínica. Las categorías y rangos se restringen a las opciones y valores observados al entrenar.""")
     st.info("Uso académico exclusivamente. No introducir datos personales reales ni utilizar la herramienta para diagnóstico o seguimiento clínico.")
 
-st.divider()
-st.caption("ACV Insight · Universidad de la Costa · Proyecto de aula 2026-2 | Prototipo no clínico")
