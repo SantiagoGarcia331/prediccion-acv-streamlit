@@ -278,18 +278,44 @@ elif seccion == "Simulador de predicción":
             st.error(f"Corrige los datos ingresados: {error}")
         else:
             st.divider()
-            st.subheader("Resultado del modelo")
-            p1, p2 = st.columns([1.4, 1])
-            with p1:
-                if prediccion == 1:
-                    st.warning("**Clase predicha: 1 — Con registro de ACV**")
-                else:
-                    st.success("**Clase predicha: 0 — Sin registro de ACV**")
-                st.caption("La etiqueta predicha describe el patrón aprendido a partir del dataset, no el estado real de salud de una persona.")
-            with p2:
-                st.metric("Salida del modelo para clase 1", f"{probabilidad:.1%}")
-                st.progress(float(probabilidad))
-                st.caption("Puntuación no calibrada como riesgo médico individual.")
+            
+            st.subheader("Resultado de la simulación")
+
+            if prediccion == 1:
+                st.warning(
+                    "**Resultado: clasificación en el grupo con ACV**"
+                )
+                st.write(
+                    "Según las características ingresadas, el modelo "
+                    "clasificó este registro en el grupo de personas "
+                    "que presentaron antecedentes de accidente "
+                    "cerebrovascular en la base de datos estudiada."
+                )
+            else:
+                st.success(
+                    "**Resultado: clasificación en el grupo sin ACV**"
+                )
+                st.write(
+                    "Según las características ingresadas, el modelo "
+                    "clasificó este registro en el grupo de personas "
+                    "que no presentaron antecedentes de accidente "
+                    "cerebrovascular en la base de datos estudiada."
+                )
+
+            st.metric(
+                "Puntuación del modelo para la categoría con ACV",
+                f"{probabilidad:.1%}"
+            )
+
+            st.progress(float(probabilidad))
+
+            st.caption(
+                "Este porcentaje representa la puntuación asignada "
+                "por el modelo a la categoría con ACV. No equivale "
+                "a la probabilidad médica de sufrir un accidente "
+                "cerebrovascular y la clasificación puede equivocarse."
+            )
+
             if usar_caso:
                 coincide = (prediccion == caso["prediccion_notebook"]
                             and abs(probabilidad - caso["probabilidad_notebook"]) < 1e-9)
