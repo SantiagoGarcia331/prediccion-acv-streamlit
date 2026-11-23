@@ -1,4 +1,4 @@
-"""ACV Insight · Aplicación académica de minería de datos.
+"""Aplicación académica de minería de datos.
 
 Ejecutar con: streamlit run app.py
 El modelo se entrena únicamente en train_model.py, fuera de esta aplicación.
@@ -28,8 +28,8 @@ COLORES = {"azul": "#173C51", "verde": "#177C79", "coral": "#B75C4D", "gris": "#
 UMBRAL_MODELO = 0.50
 
 st.set_page_config(
-    page_title="ACV Insight | Minería de Datos",
-    page_icon="🧠",
+    page_title="ACV|Minería de Datos",
+    page_icon="🩸",
     layout="wide",
     initial_sidebar_state="expanded",
 )
