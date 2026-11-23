@@ -28,7 +28,7 @@ COLORES = {"azul": "#173C51", "verde": "#177C79", "coral": "#B75C4D", "gris": "#
 UMBRAL_MODELO = 0.50
 
 st.set_page_config(
-    page_title="ACV|Minería de Datos",
+    page_title="ACV | Minería de Datos",
     page_icon="🩸",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -132,8 +132,8 @@ except (OSError, ValueError, EOFError, ImportError) as error:
 
 resultado = metricas["modelos"][metricas["seleccionado"]]
 with st.sidebar:
-    st.markdown("## ACV INSIGHT")
-    st.caption("Minería de Datos · CUC")
+    st.markdown("## ACV ")
+    st.caption("Minería de Datos")
     st.divider()
     seccion = st.radio(
         "Explorar aplicación",
