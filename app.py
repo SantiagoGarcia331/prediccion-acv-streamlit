@@ -1,7 +1,8 @@
-"""Aplicación académica de despliegue del clasificador de ACV.
+"""ACV Insight · Aplicación académica de minería de datos.
 
-Ejecutar: streamlit run app.py
-El entrenamiento se realiza únicamente con train_model.py, fuera de la app.
+Ejecutar con: streamlit run app.py
+El modelo se entrena únicamente en train_model.py, fuera de esta aplicación.
+Mejoras de interfaz de noviembre de 2026: lectura del resultado frente al umbral.
 """
 from __future__ import annotations
 
@@ -21,11 +22,14 @@ DATOS = BASE / "data" / "healthcare-dataset-stroke-data.csv"
 PIPELINE = BASE / "models" / "pipeline_acv.joblib"
 METRICAS = BASE / "models" / "metricas.json"
 CASO = BASE / "models" / "caso_prueba.json"
-COLORES = {"azul": "#16324B", "verde": "#138A86", "coral": "#DC695D", "gris": "#637484"}
+COLORES = {"azul": "#173C51", "verde": "#177C79", "coral": "#B75C4D", "gris": "#607484"}
+# El pipeline de regresión logística existente utiliza .predict(), que clasifica
+# la clase positiva con probabilidad >= 0,5. No se modifica su decisión.
+UMBRAL_MODELO = 0.50
 
 st.set_page_config(
     page_title="ACV Insight | Minería de Datos",
-    page_icon="",
+    page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -33,37 +37,89 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-      .block-container {max-width: 1190px; padding-top: 2.0rem; padding-bottom: 3rem;}
-      h1, h2, h3 {letter-spacing: -.02em; color: #173549;}
-      .stApp {background: #fcfdfd;}
-      [data-testid="stSidebar"] {background-color: #eff6f6;}
-      .hero {border-radius: 18px; padding: 28px 34px; margin-bottom: 20px;
-             background: linear-gradient(115deg,#16324B 0%,#1E5968 100%); color: white;}
-      .hero h1 {color: white; font-size: 2.2rem; margin: 8px 0 10px; line-height:1.12;}
-      .hero p {color: #e3eff1; max-width: 780px; margin-bottom: 0; font-size: 1.0rem;}
-      .eyebrow {font-size:.77rem; font-weight:700; letter-spacing:.13em; color:#8bd5d1;}
-      .panel {background: #f0f6f7; border-left: 3px solid #138A86;
-              padding: 17px 20px; border-radius: 8px; margin: 10px 0 20px;}
-      .panel strong {color: #16324B;}
-      .micro {color: #647785; font-size: .83rem;}
-      div[data-testid="stMetric"] {background: white; border:1px solid #dfebed;
-                                   border-radius: 12px; padding: 16px;}
+      :root { --azul:#173C51; --teal:#177C79; --gris:#607484; --borde:#DBE6E8; }
+      .stApp { background: #F9FBFA; }
+      .block-container { max-width: 1130px; padding-top: 2.1rem; padding-bottom: 3rem; }
+      h1, h2, h3 { color: var(--azul); letter-spacing: -.025em; }
+      h1 { font-weight: 750; }
+      [data-testid="stSidebar"] { background-color: #EFF5F3; border-right: 1px solid #DFE9E6; }
+      [data-testid="stSidebar"] h2 { font-size: 1.1rem; letter-spacing: .04em; }
+      .hero { border: 1px solid #CDE1DC; border-radius: 12px; padding: 31px 34px;
+              margin-bottom: 24px; background: #EAF3F0; }
+      .hero h1 { color: #173C51; font-size: clamp(1.8rem, 3.7vw, 2.45rem);
+                 font-weight: 780; margin: 7px 0 12px; line-height:1.12; }
+      .hero p { color: #3D5866; max-width: 790px; margin-bottom: 0; line-height: 1.6; }
+      .eyebrow { font-size:.75rem; font-weight:700; letter-spacing:.12em; color:#177C79; }
+      .panel { background: #EEF5F3; border-left: 3px solid #177C79; padding: 17px 20px;
+               border-radius: 6px; margin: 15px 0 20px; }
+      .panel strong { color: #173C51; }
+      .paso { background: white; border: 1px solid #DBE6E8; padding: 18px 20px;
+              border-radius: 10px; min-height: 136px; }
+      .paso .numero { font-size: .75rem; letter-spacing: .07em; color:#177C79;
+                      font-weight: 700; margin-bottom: 10px; }
+      .paso h4 { font-size: 1rem; margin: 0 0 8px; color: #173C51; }
+      .paso p { font-size: .92rem; color:#4A6270; margin-bottom:0; line-height:1.5; }
+      .micro { color: #607484; font-size: .84rem; }
+      div[data-testid="stMetric"] { background: white; border:1px solid #DBE6E8;
+                                     border-radius: 10px; padding: 16px; }
+      [data-testid="stForm"] { border: 1px solid #D5E4E0; border-radius: 12px;
+                               background:#FFF; padding: 20px; }
+      .resultado-etiqueta {font-size:.77rem; font-weight:750; text-transform:uppercase;
+                           letter-spacing:.10em; color:#607484;}
+      .resultado-numero {font-size:2.35rem; font-weight:800; line-height:1.3;
+                         letter-spacing:-.03em; color:#173C51;}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+
 @st.cache_resource(show_spinner="Cargando el pipeline entrenado...")
 def cargar_modelo():
     return joblib.load(PIPELINE)
+
 
 @st.cache_data(show_spinner=False)
 def cargar_datos():
     return pd.read_csv(DATOS)
 
+
 @st.cache_data(show_spinner=False)
 def cargar_metadatos():
     return json.loads(METRICAS.read_text(encoding="utf-8")), json.loads(CASO.read_text(encoding="utf-8"))
+
+
+def grafico_puntuacion(probabilidad: float, umbral: float = UMBRAL_MODELO) -> go.Figure:
+    """Barra de puntuación con referencia al umbral, sin alterar la predicción."""
+    puntuacion = max(0.0, min(1.0, float(probabilidad))) * 100
+    referencia = umbral * 100
+    color = COLORES["coral"] if probabilidad >= umbral else COLORES["verde"]
+    figura = go.Figure()
+    # Fondo de escala 0–100 % y parte rellenada: no representa certeza clínica.
+    figura.add_trace(go.Bar(
+        x=[100], y=["Puntuación"], orientation="h", marker_color="#E9F0F1",
+        width=0.38, hoverinfo="skip", showlegend=False,
+    ))
+    figura.add_trace(go.Bar(
+        x=[puntuacion], y=["Puntuación"], orientation="h", marker_color=color,
+        width=0.38, hovertemplate="Puntuación del modelo: %{x:.1f}%<extra></extra>",
+        showlegend=False,
+    ))
+    figura.add_vline(x=referencia, line_color=COLORES["azul"], line_width=2, line_dash="dash")
+    figura.add_annotation(
+        x=referencia, y=1.08, yref="paper", showarrow=False,
+        text=f"Umbral {referencia:.0f}%", font=dict(size=12, color=COLORES["azul"]),
+        xanchor="center", yanchor="bottom",
+    )
+    figura.update_layout(
+        barmode="overlay", height=170, margin=dict(l=3, r=5, t=35, b=26),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(range=[0, 100], tickvals=[0, 25, 50, 75, 100], ticksuffix="%",
+                   showgrid=False, zeroline=False, fixedrange=True, title=None),
+        yaxis=dict(visible=False, fixedrange=True),
+    )
+    return figura
+
 
 try:
     modelo = cargar_modelo()
@@ -75,9 +131,9 @@ except (OSError, ValueError, EOFError, ImportError) as error:
     st.stop()
 
 resultado = metricas["modelos"][metricas["seleccionado"]]
-
 with st.sidebar:
-    st.markdown("## PROYECTO")
+    st.markdown("## ACV INSIGHT")
+    st.caption("Minería de Datos · CUC")
     st.divider()
     seccion = st.radio(
         "Explorar aplicación",
@@ -87,15 +143,17 @@ with st.sidebar:
     st.divider()
     st.caption("**Modelo desplegado:** Regresión logística")
     st.caption("**Base de datos:** Stroke Prediction Dataset (Kaggle)")
+    st.caption("**Equipo:** Adrián García, Camilo Cornado, Liann Rivero y Santiago García")
     st.warning("Prototipo exclusivamente académico. No sirve para diagnosticar, descartar ni decidir tratamientos de ACV.")
 
 if seccion == "Inicio":
     st.markdown(
         """<section class="hero">
-          <div class="eyebrow">MINERÍA DE DATOS</div>
-          <h1>Explorando patrones asociados al ACV</h1>
-          <p>Una experiencia interactiva para estudiar un modelo de clasificación de accidente cerebrovascular
-          a partir de variables demográficas, clínicas y de estilo de vida.</p>
+          <div class="eyebrow">UNIVERSIDAD DE LA COSTA · MINERÍA DE DATOS</div>
+          <h1>ACV Insight</h1>
+          <p>Exploramos patrones asociados con el accidente cerebrovascular a partir
+          de información demográfica, clínica y de estilo de vida. Un proyecto académico
+          para comprender cómo se comporta un modelo de clasificación.</p>
         </section>""",
         unsafe_allow_html=True,
     )
@@ -116,7 +174,6 @@ if seccion == "Inicio":
         "de identificar patrones relacionados con la presencia "
         "de ACV en el conjunto de datos estudiado."
     )
-
     a, b, c, d = st.columns(4)
     a.metric("Registros originales", f'{metricas["dataset_original"]:,}'.replace(",", "."))
     b.metric("Casos con ACV", str(metricas["casos_stroke_originales"]))
@@ -125,14 +182,17 @@ if seccion == "Inicio":
     st.markdown("### ¿Qué encontrarás?")
     col1, col2, col3 = st.columns(3, gap="large")
     with col1:
-        st.markdown("**01 · Comprender**")
-        st.write("Visualizaciones de las clases, los grupos de edad y los indicadores del conjunto de datos.")
+        st.markdown("""<div class="paso"><div class="numero">01 · DATOS</div>
+          <h4>Comprender</h4><p>Explora la distribución de clases, grupos de edad y
+          otras características del conjunto de datos.</p></div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown("**02 · Experimentar**")
-        st.write("Formulario con diez variables, validación de entradas y predicciones del pipeline.")
+        st.markdown("""<div class="paso"><div class="numero">02 · SIMULACIÓN</div>
+          <h4>Experimentar</h4><p>Prueba el formulario de diez variables y consulta
+          la clasificación generada por el modelo.</p></div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown("**03 · Evaluar**")
-        st.write("Métricas, validación cruzada, matriz de confusión y limitaciones documentadas.")
+        st.markdown("""<div class="paso"><div class="numero">03 · RESULTADOS</div>
+          <h4>Evaluar</h4><p>Conoce las métricas, la matriz de confusión y
+          las limitaciones del proyecto.</p></div>""", unsafe_allow_html=True)
     st.markdown(
         "<div class='panel'><strong>¿Por qué no basta el accuracy?</strong> "
         "Solo cerca del 4,9 % de los registros originales tienen la etiqueta ACV. "
@@ -146,7 +206,6 @@ elif seccion == "Exploración de datos":
     st.caption("Datos: Stroke Prediction Dataset (Fedesoriano, Kaggle). 5.110 registros originales; se excluye el único registro de género ‘Other’ durante el modelado, siguiendo el corte 2.")
     datos_vis = datos.loc[datos["gender"] != "Other"].copy()
     datos_vis["Resultado"] = datos_vis["stroke"].map({0: "Sin registro de ACV", 1: "Con registro de ACV"})
-
     conteos = datos_vis["Resultado"].value_counts().reindex(["Sin registro de ACV", "Con registro de ACV"])
     graf1 = px.bar(
         x=conteos.index, y=conteos.values,
@@ -174,13 +233,11 @@ elif seccion == "Exploración de datos":
     )
     graf2.update_traces(texttemplate="%{y:.1f}%", textposition="outside")
     graf2.update_layout(height=350, margin=dict(l=10, r=10, t=60, b=10), yaxis_ticksuffix="%")
-
     col1, col2 = st.columns(2)
     with col1:
         st.plotly_chart(graf1, use_container_width=True)
     with col2:
         st.plotly_chart(graf2, use_container_width=True)
-
     graf3 = px.box(
         datos_vis, x="Resultado", y="avg_glucose_level", color="Resultado",
         color_discrete_map={"Sin registro de ACV": COLORES["verde"], "Con registro de ACV": COLORES["coral"]},
@@ -196,7 +253,7 @@ elif seccion == "Simulador de predicción":
     st.title("Simulador de predicción")
     st.write("Ingresa valores dentro de los rangos observados en los datos. El sistema valida las entradas y consulta el **pipeline ya entrenado**, sin volver a entrenarlo.")
     with st.expander("¿Qué significa el resultado?", expanded=False):
-        st.write("El clasificador asigna una de dos etiquetas del conjunto de datos: 0 (sin registro de ACV) o 1 (con registro de ACV). La probabilidad mostrada es una salida estadística del modelo, no una probabilidad clínica calibrada ni un diagnóstico personal.")
+        st.write("El clasificador asigna una de dos etiquetas del conjunto de datos: 0 (sin registro de ACV) o 1 (con registro de ACV). La puntuación mostrada es una salida estadística del modelo, no una probabilidad clínica calibrada ni un diagnóstico personal.")
     usar_caso = st.checkbox("Cargar ejemplo de un registro reservado del conjunto de prueba", value=False,
                             help="Permite comprobar que la app produce la misma predicción que el notebook.")
     ejemplo = caso["entrada"] if usar_caso else {
@@ -213,24 +270,16 @@ elif seccion == "Simulador de predicción":
             genero = st.selectbox("Género registrado", ["Female", "Male"],
                                   index=["Female", "Male"].index(ejemplo["gender"]),
                                   format_func={"Female": "Femenino", "Male": "Masculino"}.get,
-                                  key="genero_"+sufijo)   
-            edad = st.number_input("Edad (años cumplidos)",
-                                   min_value=1,
-                                   max_value=82,
-                                   value=int(ejemplo["age"]),
-                                   step=1,
-                                   format="%d",
-                                   key="edad_"+sufijo)
-
+                                  key="genero_"+sufijo)
+            edad = st.number_input("Edad (años cumplidos)", min_value=1, max_value=82,
+                                   value=int(ejemplo["age"]), step=1, format="%d", key="edad_"+sufijo)
             estado = st.selectbox("¿Alguna vez estuvo casado/a?", ["Yes", "No"],
                                   index=["Yes", "No"].index(ejemplo["ever_married"]),
-                                  format_func={"Yes": "Sí", "No": "No"}.get,
-                                  key="estado_"+sufijo)
+                                  format_func={"Yes": "Sí", "No": "No"}.get, key="estado_"+sufijo)
         with derecha:
             tipos = ["Private", "Self-employed", "Govt_job", "children", "Never_worked"]
             traduccion_tipos = {"Private": "Empleo privado", "Self-employed": "Trabajo independiente",
-                                "Govt_job": "Empleo público", "children": "Menor de edad",
-                                "Never_worked": "Nunca ha trabajado"}
+                                "Govt_job": "Empleo público", "children": "Menor de edad", "Never_worked": "Nunca ha trabajado"}
             trabajo = st.selectbox("Tipo de actividad", tipos, index=tipos.index(ejemplo["work_type"]),
                                    format_func=traduccion_tipos.get, key="trabajo_"+sufijo)
             residencia = st.selectbox("Zona de residencia", ["Urban", "Rural"],
@@ -246,8 +295,7 @@ elif seccion == "Simulador de predicción":
         st.markdown("#### 2 · Indicadores de salud registrados")
         izq2, der2 = st.columns(2)
         with izq2:
-            hipertension = st.selectbox("Hipertensión informada", [0, 1],
-                                        index=int(ejemplo["hypertension"]),
+            hipertension = st.selectbox("Hipertensión informada", [0, 1], index=int(ejemplo["hypertension"]),
                                         format_func=lambda x: "Sí" if x else "No", key="hip_"+sufijo)
             cardiaca = st.selectbox("Antecedente de enfermedad cardíaca", [0, 1],
                                     index=int(ejemplo["heart_disease"]),
@@ -264,7 +312,6 @@ elif seccion == "Simulador de predicción":
                 key="imc_"+sufijo)
         st.caption("Los límites numéricos corresponden a los valores observados en el dataset. No son límites de normalidad médica.")
         enviar = st.form_submit_button("Calcular predicción del modelo", type="primary", use_container_width=True)
-
     if enviar:
         registro = {
             "gender": genero, "age": edad, "hypertension": hipertension,
@@ -278,13 +325,9 @@ elif seccion == "Simulador de predicción":
             st.error(f"Corrige los datos ingresados: {error}")
         else:
             st.divider()
-            
             st.subheader("Resultado de la simulación")
-
             if prediccion == 1:
-                st.warning(
-                    "**Resultado: clasificación en el grupo con ACV**"
-                )
+                st.warning("**Resultado: clasificación en el grupo con ACV**")
                 st.write(
                     "Según las características ingresadas, el modelo "
                     "clasificó este registro en el grupo de personas "
@@ -292,30 +335,32 @@ elif seccion == "Simulador de predicción":
                     "cerebrovascular en la base de datos estudiada."
                 )
             else:
-                st.success(
-                    "**Resultado: clasificación en el grupo sin ACV**"
-                )
+                st.success("**Resultado: clasificación en el grupo sin ACV**")
                 st.write(
                     "Según las características ingresadas, el modelo "
                     "clasificó este registro en el grupo de personas "
                     "que no presentaron antecedentes de accidente "
                     "cerebrovascular en la base de datos estudiada."
                 )
-
-            st.metric(
-                "Puntuación del modelo para la categoría con ACV",
-                f"{probabilidad:.1%}"
+            # Cambio solicitado por el docente: la puntuación se interpreta en
+            # una barra con la línea de decisión en el 50 %.
+            st.markdown('<div class="resultado-etiqueta">Puntuación del modelo · categoría con ACV</div>',
+                        unsafe_allow_html=True)
+            st.markdown(f'<div class="resultado-numero">{probabilidad:.1%}</div>',
+                        unsafe_allow_html=True)
+            st.plotly_chart(grafico_puntuacion(probabilidad), use_container_width=True, config={"displayModeBar": False})
+            sentido = "igual o superior" if probabilidad >= UMBRAL_MODELO else "inferior"
+            st.write(
+                f"La puntuación es **{sentido} al umbral de clasificación de {UMBRAL_MODELO:.0%}**. "
+                f"Por eso, el modelo asigna el registro al grupo **{'con ACV' if prediccion == 1 else 'sin ACV'}** "
+                "en el conjunto de datos estudiado."
             )
-
-            st.progress(float(probabilidad))
-
             st.caption(
                 "Este porcentaje representa la puntuación asignada "
                 "por el modelo a la categoría con ACV. No equivale "
                 "a la probabilidad médica de sufrir un accidente "
                 "cerebrovascular y la clasificación puede equivocarse."
             )
-
             if usar_caso:
                 coincide = (prediccion == caso["prediccion_notebook"]
                             and abs(probabilidad - caso["probabilidad_notebook"]) < 1e-9)
@@ -373,9 +418,6 @@ else:  # Sobre el proyecto
     st.markdown("**Integrantes:** Adrián García De la Rosa · Camilo Cornado Barraza · Liann Rivero Torres · Santiago García Jiménez")
     st.markdown("**Fuente:** [Stroke Prediction Dataset, Fedesoriano (Kaggle)](https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset)")
     st.markdown("""**Método:** limpieza de registros, separación estratificada entrenamiento/prueba, imputación aprendida en entrenamiento, escalado de numéricas, codificación one-hot de categóricas y regresión logística ponderada por clases. El modelo completo se guarda en `models/pipeline_acv.joblib` y se carga para la predicción.
-
 **Continuidad del trabajo:** el análisis exploratorio se inició en el primer corte; en el segundo se compararon clasificadores y se documentaron sus métricas; en el tercero se construyó y probó esta interfaz reproducible.
-
 **Limitaciones:** datos históricos secundarios; desbalance pronunciado de clases; precisión positiva baja; numerosos falsos positivos; ausencia de calibración probabilística, evaluación externa o validación clínica. Las categorías y rangos se restringen a las opciones y valores observados al entrenar.""")
     st.info("Uso académico exclusivamente. No introducir datos personales reales ni utilizar la herramienta para diagnóstico o seguimiento clínico.")
-
